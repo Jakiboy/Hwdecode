@@ -1,3 +1,3 @@
 #!/bin/bash
-python Hwdecode.py '$2WHVM5s_OoD:|T#>(DE}"|XITBzAou<Tz&CBZ!%dK$'
+python Hwdecode.py '$2q~2-GCAixHu\rBG`%5K;`>*@NO~q58_Yo!@ADr!W$'
 read
