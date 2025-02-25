@@ -1,4 +1,4 @@
-"""Decode Huawei config.xml"""
+"""Decode Huawei router config.xml"""
 
 import sys
 from Crypto.Cipher import AES
@@ -146,7 +146,7 @@ def main():
         # If no file argument is provided, decrypt the cipher
         if args.cipher is None:
             # Check if stdin is available (e.g., running interactively)
-            if not sys.stdin.isatty():
+            if sys.stdin is None or not sys.stdin.isatty():
                 print("Error: stdin is not available. Please provide the cipher as an argument or run in an interactive terminal.")
                 sys.exit(1)
             cipher = input("Enter the encrypted cipher: ")
