@@ -100,6 +100,9 @@ def decrypt(input_data, key):
             # If padding is incorrect, return raw decrypted data
             pass
 
+        # Remove any trailing null bytes
+        decrypted_data = decrypted_data.rstrip(b'\x00')
+
         return decrypted_data.decode('utf-8')
     except (ValueError, KeyError, UnicodeDecodeError):
         return ''
