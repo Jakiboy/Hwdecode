@@ -132,12 +132,13 @@ def main():
     parser = argparse.ArgumentParser(description="Decrypt a cipher encrypted by a Huawei router.")
     parser.add_argument("cipher", nargs="?", type=str, help="The encrypted cipher string to decrypt.")
     parser.add_argument("--file", type=str, help="Path to the configuration file (config.xml).")
+    parser.add_argument("--output", type=str, default="decoded.xml", help="Path to save the decoded XML file.")
     args = parser.parse_args()
 
     if args.file:
         # Decode the XML file
-        decode_xml_file(args.file, "decoded.xml")
-        print(f"Decoded file saved as decoded.xml")
+        decode_xml_file(args.file, args.output)
+        print(f"Decoded file saved as {args.output}")
     else:
         # If no file argument is provided, decrypt the cipher
         if args.cipher is None:
