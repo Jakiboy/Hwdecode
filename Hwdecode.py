@@ -2,6 +2,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import unpad
 import html
 import argparse
+import xml.etree.ElementTree as ET
 
 BLOCKSIZE = 0x14
 PASSWORD = "6fc6e3436a53b6310dc09a475494ac774e7afb21b9e58fc8e58b5660e48e2498"
@@ -103,24 +104,50 @@ def decrypt(input_data, key):
     except (ValueError, KeyError, UnicodeDecodeError):
         return ''
 
+def decode_xml_file(input_file, output_file):
+    """Decode all encoded values in the XML file and write to a new file."""
+    tree = ET.parse(input_file)
+    root = tree.getroot()
+
+    # Iterate through all elements in the XML
+    for elem in root.iter():
+        # Check attributes for encoded values
+        for attr in elem.attrib:
+            value = elem.attrib[attr]
+            if value.startswith("$2") and value.endswith("$"):
+                # Decode the value
+                decoded_value = decrypt(value, PASSWORD)
+                if decoded_value:
+                    # Update the attribute with the decoded value
+                    elem.attrib[attr] = decoded_value
+
+    # Save the updated XML to a new file
+    tree.write(output_file, encoding='utf-8', xml_declaration=True)
+
 def main():
     # Set up argument parser
     parser = argparse.ArgumentParser(description="Decrypt a cipher encrypted by a Huawei router.")
     parser.add_argument("cipher", nargs="?", type=str, help="The encrypted cipher string to decrypt.")
+    parser.add_argument("--file", type=str, help="Path to the configuration file (config.xml).")
     args = parser.parse_args()
 
-    # If no argument is provided, prompt the user for input
-    if args.cipher is None:
-        cipher = input("Enter the encrypted cipher: ")
+    if args.file:
+        # Decode the XML file
+        decode_xml_file(args.file, "decoded.xml")
+        print(f"Decoded file saved as decoded.xml")
     else:
-        cipher = args.cipher
+        # If no file argument is provided, decrypt the cipher
+        if args.cipher is None:
+            cipher = input("Enter the encrypted cipher: ")
+        else:
+            cipher = args.cipher
 
-    # Decrypt the cipher
-    decrypted_result = decrypt(cipher, PASSWORD)
-    if decrypted_result:
-        print(decrypted_result)
-    else:
-        print("Error: Failed to decrypt the cipher")
+        # Decrypt the cipher
+        decrypted_result = decrypt(cipher, PASSWORD)
+        if decrypted_result:
+            print(decrypted_result)
+        else:
+            print("Error: Failed to decrypt the cipher")
 
 if __name__ == "__main__":
     main()
