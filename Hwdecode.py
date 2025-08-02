@@ -110,25 +110,35 @@ def decrypt(input_data, key):
     except (ValueError, KeyError, UnicodeDecodeError):
         return ''
 
-def decode_xml_file(input_file, output_file):
+def decode_xml_file(input_file, output_file, silent=False):
     """Decode all encoded values in the XML file and write to a new file."""
-    tree = ET.parse(input_file)
-    root = tree.getroot()
+    try:
+        tree = ET.parse(input_file)
+        root = tree.getroot()
 
-    # Iterate through all elements in the XML
-    for elem in root.iter():
-        # Check attributes for encoded values
-        for attr in elem.attrib:
-            value = elem.attrib[attr]
-            if value.startswith("$2") and value.endswith("$"):
-                # Decode the value
-                decoded_value = decrypt(value, PASSWORD)
-                if decoded_value:
-                    # Update the attribute with the decoded value
-                    elem.attrib[attr] = decoded_value
+        # Iterate through all elements in the XML
+        for elem in root.iter():
+            # Check attributes for encoded values
+            for attr in elem.attrib:
+                value = elem.attrib[attr]
+                if value.startswith("$2") and value.endswith("$"):
+                    # Decode the value
+                    decoded_value = decrypt(value, PASSWORD)
+                    if decoded_value:
+                        # Update the attribute with the decoded value
+                        elem.attrib[attr] = decoded_value
 
-    # Save the updated XML to a new file
-    tree.write(output_file, encoding='utf-8', xml_declaration=True)
+        # Save the updated XML to a new file
+        tree.write(output_file, encoding='utf-8', xml_declaration=True)
+        return True
+    except ET.ParseError as e:
+        if not silent:
+            print(f"Error: XML parsing failed - {e}")
+        return False
+    except Exception as e:
+        if not silent:
+            print(f"Error: Failed to process XML file - {e}")
+        return False
 
 def main():
     # Set up argument parser
@@ -136,18 +146,26 @@ def main():
     parser.add_argument("cipher", nargs="?", type=str, help="The encrypted cipher string to decrypt.")
     parser.add_argument("--file", type=str, help="Path to the configuration file (config.xml).")
     parser.add_argument("--output", type=str, default="decoded.xml", help="Path to save the decoded XML file.")
+    parser.add_argument("--silent", action="store_true", help="Suppress error messages.")
     args = parser.parse_args()
 
     if args.file:
         # Decode the XML file
-        decode_xml_file(args.file, args.output)
-        print(f"Decoded file saved as {args.output}")
+        success = decode_xml_file(args.file, args.output, args.silent)
+        if success:
+            if not args.silent:
+                print(f"Decoded file saved as {args.output}")
+        else:
+            if not args.silent:
+                print("Failed to decode XML file")
+            sys.exit(1)
     else:
         # If no file argument is provided, decrypt the cipher
         if args.cipher is None:
             # Check if stdin is available (e.g., running interactively)
             if sys.stdin is None or not sys.stdin.isatty():
-                print("Error: stdin is not available. Please provide the cipher as an argument or run in an interactive terminal.")
+                if not args.silent:
+                    print("Error: stdin is not available. Please provide the cipher as an argument or run in an interactive terminal.")
                 sys.exit(1)
             cipher = input("Enter the encrypted cipher: ")
         else:
@@ -158,7 +176,8 @@ def main():
         if decrypted_result:
             print(decrypted_result)
         else:
-            print("Error: Failed to decrypt the cipher")
+            if not args.silent:
+                print("Error: Failed to decrypt the cipher")
 
 if __name__ == "__main__":
     main()
