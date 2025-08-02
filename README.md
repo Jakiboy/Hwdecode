@@ -13,6 +13,7 @@ pip install -r requirements.txt
 ```bash
 python Hwdecode.py 'HEX'
 python Hwdecode.py --file config.xml --output decoded.xml
+python Hwdecode.py --silent --file config.xml --output decoded.xml
 ```
 
 ## Teseted:
